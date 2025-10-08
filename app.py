@@ -8,7 +8,7 @@ from flask import Flask, jsonify
 from apscheduler.schedulers.background import BackgroundScheduler
 
 # ==================== CONFIG ====================
-API_1M = "https://wingo1min-api.onrender.com/api/results"
+API_1M = "https://wingo-unified-api.gt.tc//api/wingo.php?type=1min"
 HISTORY_FILE = "history.json"
 CHECK_INTERVAL = 60
 
@@ -70,8 +70,7 @@ def has_two_consecutive_losses(predictions):
     recent = [p for p in predictions if p.get('result') != 'P'][:2]
     return len(recent) == 2 and all(p['result'] == 'Lose' for p in recent)
 
-# ==================== FULL PATTERN LIST FROM drmfix.txt ====================
-# Converted from: STREAK_BREAK_PATTERNS.map(p => p.join(''))
+# ==================== FULL PATTERN LIST ====================
 STREAK_BREAK_PATTERNS = [
     "BBBS", "BBSB", "BSBB", "SBBB", "SSSB", "SSBS", "SBSS", "BSSS",
     "BBSS", "BSSB", "SSBB", "SBBS", "BSBS", "SBSB", "BBBB", "SSSS",
@@ -312,7 +311,12 @@ def get_history():
 if __name__ == "__main__":
     logging.basicConfig(level=logging.INFO)
     load_history()
-    
+
+    # ⚡ Run first prediction immediately
+    logging.info("Running initial prediction job...")
+    prediction_job()
+
+    # 🔁 Start background scheduler for continuous updates
     scheduler = BackgroundScheduler()
     scheduler.add_job(prediction_job, 'interval', seconds=CHECK_INTERVAL)
     scheduler.start()
